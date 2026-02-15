@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+dist/
+
+# Environment Variables (CRITICAL)
+.env
+.env.local
+.env.*.local
+
+# Debug logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
