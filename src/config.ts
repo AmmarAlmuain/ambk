@@ -1,6 +1,6 @@
 import { z } from "zod";
 import "dotenv/config";
-import { logger } from "./utils/logger";
+import { logger } from "./utils/logger.js";
 
 export const schema = z.object({
   APP_NAME: z.string().default("MarketplaceAPI"),

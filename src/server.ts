@@ -1,6 +1,6 @@
-import buildApp from "./app";
-import { config } from "./config";
-import { logger } from "./utils/logger";
+import buildApp from "./app.js";
+import { config } from "./config.js";
+import { logger } from "./utils/logger.js";
 
 const start = async () => {
   const app = await buildApp();

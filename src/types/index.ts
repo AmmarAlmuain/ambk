@@ -1,5 +1,12 @@
+import { SupabaseClient } from "@supabase/supabase-js/dist/index.mjs";
 import { FastifyError } from "fastify";
 import { ZodIssue } from "zod";
+
+declare module "fastify" {
+  interface FastifyInstance {
+    supabase: SupabaseClient;
+  }
+}
 
 export type AppError = FastifyError & {
   validation?: ZodIssue[];

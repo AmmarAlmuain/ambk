@@ -6,9 +6,9 @@ import {
 } from "fastify-type-provider-zod";
 import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
-import { config } from "./config";
-import supabasePlugin from "./plugins/supabase";
-import { AppError, StandardResponse } from "./types";
+import { config } from "./config.js";
+import supabasePlugin from "./plugins/supabase.js";
+import { AppError, StandardResponse } from "./types/index.js";
 
 const buildApp = async () => {
   const app = Fastify({
