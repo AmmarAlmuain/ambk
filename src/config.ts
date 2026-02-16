@@ -5,6 +5,8 @@ import { logger } from "./utils/logger.js";
 export const schema = z.object({
   APP_NAME: z.string().default("MarketplaceAPI"),
   APP_VERSION: z.string().default("1.0.0"),
+  API_PREFIX: z.string().default("/api"),
+  API_VERSION: z.string().default("v1"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -30,7 +32,10 @@ if (!result.success) {
   process.exit(1);
 }
 
-export const config = result.data;
+export const config = {
+  ...result.data,
+  API_BASE: `/${result.data.API_PREFIX}/${result.data.API_VERSION}`,
+};
 
 export const envOptions = {
   dotenv: true,

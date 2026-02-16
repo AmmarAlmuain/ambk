@@ -9,6 +9,8 @@ import fastifyHelmet from "@fastify/helmet";
 import { config } from "./config.js";
 import supabasePlugin from "./plugins/supabase.js";
 import { AppError, StandardResponse } from "./types/index.js";
+import categoryRoutes from "./routes/category.js";
+import masterRouter from "routes/index.js";
 
 const buildApp = async () => {
   const app = Fastify({
@@ -38,6 +40,7 @@ const buildApp = async () => {
   });
 
   await app.register(supabasePlugin);
+  await app.register(masterRouter, { prefix: config.API_BASE });
 
   app.setErrorHandler((error: AppError, request, reply) => {
     app.log.error(error);
@@ -83,10 +86,6 @@ const buildApp = async () => {
     };
 
     return successResponse;
-  });
-
-  app.get("/health", async () => {
-    return { status: "online", environment: config.NODE_ENV };
   });
 
   return app;
