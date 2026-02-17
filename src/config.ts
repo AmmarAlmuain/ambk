@@ -16,6 +16,12 @@ export const schema = z.object({
     .string()
     .min(1, { message: "Supabase Anon Key is required" }),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  OTPIQ_API_KEY: z.string(),
+  OTPIQ_SENDER_ID: z.string().default("Am App"),
+  JWT_SECRET: z.string(),
+  IMAGEKIT_PRIVATE_KEY: z.string(),
+  IMAGEKIT_PUBLIC_KEY: z.string(),
+  IMAGEKIT_URL_ENDPOINT: z.string(),
 });
 
 export type EnvConfig = z.infer<typeof schema>;

@@ -5,6 +5,17 @@ import { ZodIssue } from "zod";
 declare module "fastify" {
   interface FastifyInstance {
     supabase: SupabaseClient;
+    authenticate: (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) => Promise<void>;
+  }
+
+  interface FastifyRequest {
+    user: {
+      id: string;
+      phone: string;
+    };
   }
 }
 
@@ -17,11 +28,12 @@ export interface StandardResponse<T = unknown> {
   error: {
     message: string;
     code?: string;
-    details?: ZodIssue[] | unknown | null;
+    details?: any;
   } | null;
   meta: {
     version: string;
     timestamp: string;
     requestId?: string;
   };
+  statusCode: number;
 }

@@ -1,4 +1,4 @@
-import Fastify from "fastify";
+import Fastify, { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -8,9 +8,10 @@ import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
 import { config } from "./config.js";
 import supabasePlugin from "./plugins/supabase.js";
-import { AppError, StandardResponse } from "./types/index.js";
-import categoryRoutes from "./routes/category.js";
 import masterRouter from "routes/index.js";
+import { createResponse } from "utils/response.js";
+import fastifyJwt from "@fastify/jwt";
+import multipart from "@fastify/multipart";
 
 const buildApp = async () => {
   const app = Fastify({
@@ -29,64 +30,69 @@ const buildApp = async () => {
       Math.random().toString(36).substring(2, 11),
   }).withTypeProvider<ZodTypeProvider>();
 
+  app.setErrorHandler((error: FastifyError, request, reply) => {
+    const statusCode = error.statusCode || 500;
+
+    const formattedError = createResponse(
+      null,
+      {
+        message: error.message,
+        code: error.code || "VALIDATION_ERROR",
+        details: (error as any).validation || null,
+      },
+      request.id,
+    );
+
+    return reply.status(statusCode).send(formattedError);
+  });
+
   app.log.info(`Initializing ${config.APP_NAME} v${config.APP_VERSION}`);
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
+  await app.register(multipart, {
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+    },
+  });
   await app.register(fastifyHelmet);
   await app.register(fastifyCors, {
     origin: true,
   });
+  app.register(fastifyJwt, {
+    secret: config.JWT_SECRET,
+    messages: {
+      badRequestErrorMessage: "Format is Authorization: Bearer [token]",
+      noAuthorizationInHeaderMessage: "No Authorization header was found",
+      authorizationTokenExpiredMessage: "Token expired",
+      authorizationTokenInvalid: (err) => `Token is invalid: ${err.message}`,
+    },
+  });
+  app.decorate(
+    "authenticate",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        await request.jwtVerify();
+      } catch (err: any) {
+        const authError = createResponse(
+          null,
+          {
+            message: "You must be logged in to access this",
+            code: "UNAUTHORIZED",
+            details: err.message,
+          },
+          request.id,
+          401,
+        );
+
+        return reply.status(401).send(authError);
+      }
+    },
+  );
 
   await app.register(supabasePlugin);
   await app.register(masterRouter, { prefix: config.API_BASE });
-
-  app.setErrorHandler((error: AppError, request, reply) => {
-    app.log.error(error);
-
-    const statusCode = error.statusCode || 500;
-
-    const errorResponse: StandardResponse = {
-      data: null,
-      error: {
-        message: error.message || "Internal Server Error",
-        code: error.code || "INTERNAL_SERVER_ERROR",
-        details: error.validation || null,
-      },
-      meta: {
-        version: config.APP_VERSION,
-        timestamp: new Date().toISOString(),
-        requestId: request.id,
-      },
-    };
-
-    return reply.status(statusCode).send(errorResponse);
-  });
-
-  app.addHook("preSerialization", async (request, reply, payload: any) => {
-    const isStandard =
-      payload &&
-      typeof payload === "object" &&
-      ("data" in payload || "error" in payload) &&
-      "meta" in payload;
-
-    if (isStandard) {
-      return payload;
-    }
-
-    const successResponse: StandardResponse = {
-      data: payload ?? null,
-      error: null,
-      meta: {
-        version: config.APP_VERSION,
-        timestamp: new Date().toISOString(),
-        requestId: request.id,
-      },
-    };
-
-    return successResponse;
-  });
 
   return app;
 };
