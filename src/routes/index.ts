@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import categoryRoutes from "./category.js";
-import { config } from "config.js";
+import { config } from "../config.js";
 import authRoutes from "./auth.js";
 import userRoutes from "./user.js";
 import addressRoutes from "./address.js";

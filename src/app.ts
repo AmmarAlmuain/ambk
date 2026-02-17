@@ -8,8 +8,8 @@ import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
 import { config } from "./config.js";
 import supabasePlugin from "./plugins/supabase.js";
-import masterRouter from "routes/index.js";
-import { createResponse } from "utils/response.js";
+import masterRouter from "./routes/index.js";
+import { createResponse } from "./utils/response.js";
 import fastifyJwt from "@fastify/jwt";
 import multipart from "@fastify/multipart";
 
