@@ -5,7 +5,6 @@ import { FastifyInstance } from "fastify";
 describe("App Ultimate E2E: Full Business Lifecycle", () => {
   let app: FastifyInstance;
 
-  // Real-time state captured during the test
   let jwtToken: string;
   let categoryId: string;
   let productId: string;
@@ -21,8 +20,6 @@ describe("App Ultimate E2E: Full Business Lifecycle", () => {
     app = await buildApp();
   });
 
-  // --- PHASE 1: AUTHENTICATION (The "Real" Chain) ---
-
   it("1. Request OTP - Should trigger DB entry", async () => {
     const res = await app.inject({
       method: "POST",
@@ -33,7 +30,6 @@ describe("App Ultimate E2E: Full Business Lifecycle", () => {
   });
 
   it("2. Verify OTP - Should fetch code from DB and return JWT", async () => {
-    // We reach into Supabase to get the ACTUAL code generated in Step 1
     const { data: otpRow } = await app.supabase
       .from("otps")
       .select("code")
@@ -51,10 +47,8 @@ describe("App Ultimate E2E: Full Business Lifecycle", () => {
     const body = JSON.parse(res.payload);
     expect(res.statusCode).toBe(200);
     expect(body.data.token).toBeDefined();
-    jwtToken = body.data.token; // Save token for all following protected routes
+    jwtToken = body.data.token;
   });
-
-  // --- PHASE 2: USER SETUP ---
 
   it("3. Profile Setup - Update name and become a Seller", async () => {
     const res = await app.inject({
@@ -92,13 +86,11 @@ describe("App Ultimate E2E: Full Business Lifecycle", () => {
     addressId = body.data.id;
   });
 
-  // --- PHASE 3: MARKETPLACE FLOW ---
-
   it("5. Category Discovery - Fetch real ID from DB", async () => {
     const res = await app.inject({ method: "GET", url: "/api/v1/categories" });
     const body = JSON.parse(res.payload);
     expect(body.data.length).toBeGreaterThan(0);
-    categoryId = body.data[0].id; // Pulling a real, existing category ID
+    categoryId = body.data[0].id;
   });
 
   it("6. Product Creation - Post a listing using Category and JWT ID", async () => {
@@ -119,8 +111,6 @@ describe("App Ultimate E2E: Full Business Lifecycle", () => {
     expect(res.statusCode).toBe(201);
     productId = body.data.id;
   });
-
-  // --- PHASE 4: SOCIAL & RETRIEVAL ---
 
   it("7. Product Interaction - Post a public comment", async () => {
     const res = await app.inject({
@@ -145,15 +135,11 @@ describe("App Ultimate E2E: Full Business Lifecycle", () => {
 
     const body = JSON.parse(res.payload);
     expect(res.statusCode).toBe(200);
-    // Verify the deep join: Product -> Seller -> Address
     expect(body.data.seller.full_name).toBe(testUser.name);
     expect(body.data.seller.address[0].governorate).toBe("Babylon");
   });
 
-  // --- CLEANUP ---
-
   afterAll(async () => {
-    // Delete the test user; Postgres cascades will clean up products, addresses, and comments
     await app.supabase
       .from("accounts")
       .delete()

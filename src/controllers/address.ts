@@ -3,7 +3,6 @@ import { z } from "zod";
 import { createResponse } from "../utils/response.js";
 import { StandardResponse } from "../types/index.js";
 
-// Validation Schema
 export const addressBodySchema = z.object({
   governorate: z.string(),
   city_district: z.string().min(2),
